@@ -22,16 +22,18 @@
 <body>
   <div id="app">
     <header id="header">
-      <span id="heroTime" class="hero-time"></span>
-      <button id="streakBadge" class="streak-badge" aria-label="View streak history">
-        <span id="streakIcon">&#x1F525;</span>
+      <span id="heroTime" class="hero-time" aria-hidden="true"></span>
+      <button id="streakBadge" class="streak-badge" aria-label="Streak: 0 days. View history.">
+        <span id="streakIcon" class="icon-flame" aria-hidden="true"></span>
         <span id="streakCount">0</span>
       </button>
     </header>
 
-    <div id="dayStrip" class="day-strip"></div>
+    <div id="dayStrip" class="day-strip" role="list" aria-label="Week view"></div>
 
-    <div id="degradedBanner" class="degraded-banner hidden">
+    <section id="anchorCards" class="anchor-cards" role="list" aria-label="Anchors"></section>
+
+    <div id="degradedBanner" class="degraded-banner hidden" role="alert">
       <span id="degradedMessage">The day's been disrupted. Try a shorter version?</span>
       <div class="degraded-actions">
         <button id="degradedAccept" class="degraded-btn accept">Accept 15 min</button>
@@ -39,7 +41,7 @@
       </div>
     </div>
 
-    <div id="missTwiceNudge" class="miss-twice-nudge hidden">
+    <div id="missTwiceNudge" class="miss-twice-nudge hidden" role="alert">
       <span id="missTwiceMessage">This slipped twice — shrink it to the two-minute version?</span>
       <div class="degraded-actions">
         <button id="missTwiceAccept" class="degraded-btn accept">Use entry version</button>
@@ -48,7 +50,7 @@
     </div>
 
     <main id="main">
-      <div id="nowCard" class="now-card">
+      <div id="nowCard" class="now-card" role="region" aria-label="Current task">
         <div class="now-card-content">
           <span id="nowIdentity" class="now-identity hidden"></span>
           <span id="nowRole" class="now-role-tag"></span>
@@ -60,55 +62,57 @@
             <span id="nowUntil" class="caption"></span>
           </div>
           <div class="now-completed-msg hidden" id="nowCompleted">
-            <span class="completed-check">&#x2713;</span>
+            <span class="completed-check icon-check" aria-hidden="true"></span>
             <span class="completed-text">Completed</span>
           </div>
           <div id="nowActions" class="now-actions">
-            <button id="markDone" class="btn primary">Mark Done</button>
-            <button id="markEntry" class="btn entry hidden">Or just: <span id="markEntryLabel"></span></button>
-            <button id="holdTask" class="btn hold hidden">Held</button>
-            <button id="slipTask" class="btn slip hidden">Slipped</button>
-            <button id="imBack" class="btn secondary">I'm Back</button>
+            <button id="markDone" class="btn primary" aria-label="Mark task as done">Mark Done</button>
+            <button id="markEntry" class="btn entry hidden" aria-label="Mark task as done with entry version">Or just: <span id="markEntryLabel"></span></button>
+            <button id="holdTask" class="btn hold hidden" aria-label="Mark habit as held today">Held</button>
+            <button id="slipTask" class="btn slip hidden" aria-label="Mark habit as slipped">Slipped</button>
+            <button id="imBack" class="btn secondary" aria-label="Resume after disruption">I'm Back</button>
           </div>
         </div>
       </div>
 
+      <div id="filterTabs" class="filter-tabs" role="tablist" aria-label="Filter by category"></div>
+
       <section id="queueSection">
         <h3 class="section-heading">Up Next</h3>
-        <ul id="queueList" class="queue-list"></ul>
+        <ul id="queueList" class="queue-list" role="list"></ul>
         <div id="emptyState" class="empty-state hidden">
-          <p class="body">Nothing queued &mdash; paste in your next batch.</p>
-          <button id="emptyImportBtn" class="btn outline">+ Paste Tasks</button>
+          <p class="body">Nothing queued — paste in your next batch.</p>
+          <button id="emptyImportBtn" class="btn outline" aria-label="Open import sheet">Paste Tasks</button>
         </div>
       </section>
 
-      <div id="quoteContainer" class="quote-container">
+      <div id="quoteContainer" class="quote-container" aria-hidden="true">
         <p id="quoteText" class="quote-text"></p>
         <span id="quoteAuthor" class="quote-author"></span>
       </div>
     </main>
 
-    <footer id="footer">
-      <button id="importTrigger" class="btn outline import-trigger">+ Paste Tasks</button>
-    </footer>
+    <button id="fab" class="fab" aria-label="Import tasks">
+      <span class="icon-plus" aria-hidden="true"></span>
+    </button>
 
-    <div id="streakPanel" class="streak-panel hidden">
+    <div id="streakPanel" class="streak-panel hidden" role="dialog" aria-label="Streak history">
       <h3 class="section-heading">Streak &amp; Score</h3>
       <div class="streak-summary">
         <span>Score: <strong id="scoreDisplay">0</strong></span>
       </div>
       <h4 class="section-heading" style="font-size:var(--caption);margin-top:4px">Last 7 Days</h4>
       <div id="streakHistory" class="streak-history"></div>
-      <button id="streakClose" class="btn ghost">Close</button>
+      <button id="streakClose" class="btn ghost" aria-label="Close streak panel">Close</button>
     </div>
 
-    <div id="overlay" class="overlay hidden"></div>
+    <div id="overlay" class="overlay hidden" aria-hidden="true"></div>
 
-    <div id="importSheet" class="import-sheet hidden">
+    <div id="importSheet" class="import-sheet hidden" role="dialog" aria-label="Import tasks">
       <h3 class="section-heading">Import Tasks</h3>
       <p class="caption sheet-hint">Paste the JSON Claude gave you.</p>
       <textarea id="importInput" class="import-input" rows="6" placeholder='[{"title": "...", "role": "deep", "type": "build", "durationMinutes": 45, "priority": 1}]'></textarea>
-      <div id="importError" class="import-error hidden"></div>
+      <div id="importError" class="import-error hidden" role="alert"></div>
       <button id="importSubmit" class="btn primary full">Merge In</button>
       <button id="importCancel" class="btn ghost full">Cancel</button>
     </div>

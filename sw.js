@@ -15,6 +15,7 @@ const assets = [
   '/js/streak.js',
   '/js/quotes.js',
   '/js/ui.js',
+  '/icons/icons.js',
   '/manifest.json',
   '/icons/hourglass.svg'
 ];

@@ -1,12 +1,12 @@
 const anchors = {
   weekday: [
-    { id: 'day-job', title: 'Day Job', role: 'job', startTime: '01:00', endTime: '11:00' },
+    { id: 'one-forma', title: 'One Forma', role: 'job', startTime: '01:00', endTime: '11:00' },
     { id: 'evening-word', title: 'Evening Word', role: 'faith', startTime: '19:30', endTime: '20:00' }
   ],
   sunday: [
-    { id: 'day-job-1', title: 'Day Job', role: 'job', startTime: '01:00', endTime: '06:30' },
+    { id: 'one-forma-1', title: 'One Forma', role: 'job', startTime: '01:00', endTime: '06:30' },
     { id: 'church', title: 'Sunday Church', role: 'faith', startTime: '06:30', endTime: '10:00' },
-    { id: 'day-job-2', title: 'Day Job', role: 'job', startTime: '10:00', endTime: '14:30' },
+    { id: 'one-forma-2', title: 'One Forma', role: 'job', startTime: '10:00', endTime: '14:30' },
     { id: 'evening-word', title: 'Evening Word', role: 'faith', startTime: '19:30', endTime: '20:00' }
   ]
 };

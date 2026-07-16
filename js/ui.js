@@ -4,6 +4,7 @@ import { nextTask, prioritizedQueue } from './queue.js';
 import { shouldOfferDegraded, shouldAutoDegrade, isDegradedDismissed } from './degraded.js';
 import { getStreak, getRecentHistory } from './streak.js';
 import { getQuote } from './quotes.js';
+import { icon } from '../icons/icons.js';
 
 const ROLE_COLORS = {
   faith: 'var(--accentFaith)',
@@ -13,10 +14,30 @@ const ROLE_COLORS = {
   rest: 'var(--accentRest)'
 };
 
+const ROLE_LABELS = {
+  faith: 'Faith',
+  deep: 'Deep',
+  growth: 'Growth',
+  job: 'Job',
+  rest: 'Rest'
+};
+
+let activeFilter = 'all';
+
+export function setActiveFilter(role) {
+  activeFilter = role;
+}
+
+export function getActiveFilter() {
+  return activeFilter;
+}
+
 export function renderAll(state) {
   renderStreakBadge(state);
   renderDayStrip();
+  renderAnchorCards(state);
   renderNowCard(state);
+  renderFilterTabs(state);
   renderQueue(state);
   renderQuote();
   renderDegradedBanner(state);
@@ -33,7 +54,9 @@ export function renderHeroTime() {
 
 export function renderStreakBadge(state) {
   const streak = getStreak();
-  document.getElementById('streakCount').textContent = streak.current;
+  const count = streak.current;
+  document.getElementById('streakCount').textContent = count;
+  document.getElementById('streakBadge').setAttribute('aria-label', `Streak: ${count} days. View history.`);
 }
 
 export function renderDayStrip() {
@@ -49,13 +72,46 @@ export function renderDayStrip() {
     const iso = d.toISOString().slice(0, 10);
     const isToday = iso === todayISOStr;
     html += `
-      <div class="day-strip-cell ${isToday ? 'today' : ''}">
+      <div class="day-strip-cell ${isToday ? 'today' : ''}" role="listitem" ${isToday ? 'aria-current="date"' : ''}>
         <span class="day-strip-label">${dayNames[i]}</span>
         <span class="day-strip-num">${d.getDate()}</span>
       </div>
     `;
   }
   strip.innerHTML = html;
+}
+
+export function renderAnchorCards(state) {
+  const container = document.getElementById('anchorCards');
+  const anchors = getAnchorsForToday();
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  container.innerHTML = anchors.map(a => {
+    const start = minutesFromMidnight(a.startTime);
+    const end = minutesFromMidnight(a.endTime);
+    const isActive = nowMin >= start && nowMin < end;
+    const roleClass = `role-${a.role}`;
+
+    return `
+      <div class="anchor-card ${roleClass} ${isActive ? 'active' : ''}" role="listitem">
+        <div class="anchor-card-top">
+          <span class="anchor-card-icon">${icon('lock')}</span>
+        </div>
+        <div>
+          <div class="anchor-card-title">${a.title}</div>
+          <div class="anchor-card-time">${formatTime(a.startTime)} – ${formatTime(a.endTime)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatTime(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour}${ampm}` : `${hour}:${m.toString().padStart(2, '0')}${ampm}`;
 }
 
 export function renderNowCard(state) {
@@ -69,7 +125,6 @@ export function renderNowCard(state) {
   const imBack = document.getElementById('imBack');
   const holdTask = document.getElementById('holdTask');
   const slipTask = document.getElementById('slipTask');
-  const nowActions = document.getElementById('nowActions');
   const nowIdentity = document.getElementById('nowIdentity');
   const nowStacked = document.getElementById('nowStacked');
   const nowEntry = document.getElementById('nowEntry');
@@ -90,9 +145,9 @@ export function renderNowCard(state) {
   const currentAnchor = getCurrentAnchor(anchors);
 
   if (currentAnchor) {
-    roleEl.textContent = currentAnchor.role;
+    roleEl.textContent = ROLE_LABELS[currentAnchor.role] || currentAnchor.role;
     titleEl.textContent = currentAnchor.title;
-    durationEl.textContent = `${currentAnchor.startTime} – ${currentAnchor.endTime}`;
+    durationEl.textContent = `${formatTime(currentAnchor.startTime)} – ${formatTime(currentAnchor.endTime)}`;
     untilEl.textContent = '';
     markDone.textContent = 'Mark Done';
     return;
@@ -111,7 +166,7 @@ export function renderNowCard(state) {
   }
 
   const { task, degraded, duration: overrideDuration } = result;
-  roleEl.textContent = task.role;
+  roleEl.textContent = ROLE_LABELS[task.role] || task.role;
 
   if (task.status === 'done' || task.status === 'held') {
     titleEl.textContent = task.title;
@@ -166,9 +221,7 @@ export function renderNowCard(state) {
     if (runway !== null && runway > 0) {
       const endTime = new Date();
       endTime.setMinutes(endTime.getMinutes() + Math.min(duration || 15, runway));
-      const eh = endTime.getHours().toString().padStart(2, '0');
-      const em = endTime.getMinutes().toString().padStart(2, '0');
-      untilEl.textContent = `until ${eh}:${em}`;
+      untilEl.textContent = `until ${formatTime(endTime.getHours().toString().padStart(2, '0') + ':' + endTime.getMinutes().toString().padStart(2, '0'))}`;
     } else {
       untilEl.textContent = '';
     }
@@ -179,6 +232,39 @@ export function renderNowCard(state) {
   markDone.textContent = 'Mark Done';
 }
 
+export function renderFilterTabs(state) {
+  const container = document.getElementById('filterTabs');
+  const queue = (state.tasks || []).filter(t => t.day === todayISO() && (t.status === 'pending' || t.status === 'carried_over'));
+
+  const counts = { all: 0, faith: 0, deep: 0, growth: 0, job: 0, rest: 0 };
+  for (const t of queue) {
+    counts.all++;
+    if (counts[t.role] !== undefined) counts[t.role]++;
+  }
+
+  const tabs = [
+    { role: 'all', label: 'All' },
+    { role: 'faith', label: 'Faith' },
+    { role: 'deep', label: 'Deep' },
+    { role: 'growth', label: 'Growth' },
+    { role: 'job', label: 'Job' },
+    { role: 'rest', label: 'Rest' }
+  ];
+
+  container.innerHTML = tabs
+    .filter(t => t.role === 'all' || counts[t.role] > 0)
+    .map(t => `
+      <button class="filter-tab ${activeFilter === t.role ? 'active' : ''}"
+              data-role="${t.role}"
+              role="tab"
+              aria-selected="${activeFilter === t.role}"
+              aria-label="${t.label}: ${counts[t.role]} tasks">
+        ${t.label}
+        <span class="filter-tab-count">${counts[t.role]}</span>
+      </button>
+    `).join('');
+}
+
 export function renderQueue(state) {
   const list = document.getElementById('queueList');
   const empty = document.getElementById('emptyState');
@@ -187,78 +273,53 @@ export function renderQueue(state) {
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  const currentAnchor = getCurrentAnchor(anchors);
-  let items = [];
+  const filtered = activeFilter === 'all'
+    ? queue
+    : queue.filter(t => t.role === activeFilter);
 
-  for (const a of anchors) {
-    const start = minutesFromMidnight(a.startTime);
-    if (start > nowMin || (currentAnchor && currentAnchor.id === a.id)) {
-      items.push({ type: 'anchor', data: a, active: currentAnchor && currentAnchor.id === a.id });
-    }
-  }
-
-  for (const t of queue) {
-    items.push({ type: 'task', data: t });
-  }
-
-  if (items.length === 0) {
+  if (filtered.length === 0) {
     list.innerHTML = '';
     empty.classList.remove('hidden');
     return;
   }
 
   empty.classList.add('hidden');
-  list.innerHTML = items.map(item => {
-    if (item.type === 'anchor') {
-      const a = item.data;
-      const color = ROLE_COLORS[a.role] || 'var(--accentJob)';
-      return `
-        <div class="queue-item">
-          <div class="queue-item-bar" style="background:${color}"></div>
-          <div class="queue-item-content">
-            <span class="queue-item-title">&#x1F512; ${a.title}</span>
-            <span class="anchor-time caption">${a.startTime} – ${a.endTime}</span>
-          </div>
-        </div>
-      `;
-    }
-    const t = item.data;
+  list.innerHTML = filtered.map(t => {
     const color = ROLE_COLORS[t.role] || 'var(--accentDeep)';
     const isCurb = t.type === 'curb';
-    const doneClass = t.status === 'done' ? 'done' : '';
-    const heldClass = t.status === 'held' ? 'held' : '';
-    const slippedClass = t.status === 'slipped' ? 'slipped' : '';
     const curbClass = isCurb ? 'curb' : '';
+
+    let statusHtml = '';
+    if (t.status === 'done') statusHtml = '<span class="queue-item-status completed">Completed</span>';
+    else if (t.status === 'held') statusHtml = '<span class="queue-item-status held">Held</span>';
+    else if (t.status === 'slipped') statusHtml = '<span class="queue-item-status slipped">Slipped</span>';
+    else statusHtml = '<span class="queue-item-status pending">Up Next</span>';
 
     let stackedHtml = '';
     if (t.stackedAfter) {
       const refTask = (state.tasks || []).find(r => r.id === t.stackedAfter);
       const refAnchor = anchors.find(a => a.id === t.stackedAfter);
       const refName = refTask ? refTask.title : refAnchor ? refAnchor.title : null;
-      if (refName) stackedHtml = `<div class="queue-item-stacked">After ${refName}</div>`;
+      if (refName) stackedHtml = `<span class="queue-item-stacked">After ${refName}</span>`;
     }
 
-    let statusHtml = '';
-    if (isCurb) {
-      if (t.status === 'held') statusHtml = '<span class="queue-item-status held">Held</span>';
-      else if (t.status === 'slipped') statusHtml = '<span class="queue-item-status slipped">Slipped</span>';
-    }
+    const titleClass = t.status === 'done' ? 'done' : t.status === 'held' ? 'held' : t.status === 'slipped' ? 'slipped' : '';
+    const duration = isCurb ? '' : `${t.durationMinutes || 0}m`;
+    const meta = [stackedHtml, `<span>${ROLE_LABELS[t.role] || t.role}</span>`, duration ? `<span>${duration}</span>` : ''].filter(Boolean).join(' · ');
 
     return `
-      <div class="queue-item ${curbClass}">
+      <li class="queue-item ${curbClass}" role="listitem">
         <div class="queue-item-bar" style="background:${color}"></div>
         <div class="queue-item-content">
           <div class="queue-item-text">
-            <span class="queue-item-title ${doneClass} ${heldClass} ${slippedClass}">${t.title}</span>
-            ${stackedHtml}
+            <span class="queue-item-title ${titleClass}">${t.title}</span>
+            ${meta ? `<div class="queue-item-meta">${meta}</div>` : ''}
           </div>
           <div class="queue-item-extra">
             ${statusHtml}
-            <span class="queue-item-role">${t.role}</span>
-            <span class="queue-item-duration">${t.type === 'curb' ? '' : (t.durationMinutes || 0) + 'm'}</span>
           </div>
         </div>
-      </div>
+      </li>
     `;
   }).join('');
 }
@@ -306,26 +367,30 @@ export function renderStreakPanel() {
     return `
       <div class="streak-day ${done ? 'completed' : ''}">
         <span>${label}</span>
-        <span>${done ? '&#x2713;' : '—'}</span>
+        <span>${done ? icon('checkSmall') : '—'}</span>
       </div>
     `;
   }).join('');
 }
 
 export function openImportSheet() {
-  document.getElementById('overlay').classList.remove('hidden');
-  document.getElementById('importSheet').classList.add('open');
-  document.getElementById('importSheet').classList.remove('hidden');
+  const overlay = document.getElementById('overlay');
+  const sheet = document.getElementById('importSheet');
+  overlay.classList.remove('hidden');
+  sheet.classList.add('open');
+  sheet.classList.remove('hidden');
   document.getElementById('importInput').value = '';
   document.getElementById('importError').classList.add('hidden');
   document.getElementById('importInput').focus();
 }
 
 export function closeImportSheet() {
-  document.getElementById('overlay').classList.add('hidden');
-  document.getElementById('importSheet').classList.remove('open');
+  const overlay = document.getElementById('overlay');
+  const sheet = document.getElementById('importSheet');
+  overlay.classList.add('hidden');
+  sheet.classList.remove('open');
   setTimeout(() => {
-    document.getElementById('importSheet').classList.add('hidden');
+    sheet.classList.add('hidden');
   }, 250);
 }
 
