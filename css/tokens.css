@@ -1,0 +1,33 @@
+:root {
+  --background: #0B0E1F;
+  --surface: #141833;
+  --surfaceRaised: #1C2140;
+  --primaryText: #EDEAE1;
+  --secondaryText: #8C90AC;
+  --separator: #2A2F52;
+  --accentFaith: #D8B25E;
+  --accentDeep: #8F72F2;
+  --accentGrowth: #57C9B4;
+  --accentJob: #6C7690;
+  --accentRest: #B491C4;
+  --positive: #5FBE95;
+  --destructive: #D9666B;
+
+  --heroTime: 28px;
+  --taskName: 16px;
+  --sectionHeading: 14px;
+  --body: 14px;
+  --caption: 12px;
+  --microLabel: 10px;
+  --weight500: 500;
+  --weight600: 600;
+  --weight400: 400;
+
+  --screenPad: 20px;
+  --cardPad: 14px;
+  --sectionGap: 24px;
+  --radius8: 8px;
+  --radius16: 16px;
+  --radius999: 999px;
+  --minTouch: 44px;
+}

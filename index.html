@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0B0E1F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icons/hourglass.svg">
+  <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180.png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/tokens.css">
+  <link rel="stylesheet" href="/css/reset.css">
+  <link rel="stylesheet" href="/css/styles.css">
+  <title>Rule of the Day</title>
+</head>
+<body>
+  <div id="app">
+    <header id="header">
+      <span id="heroTime" class="hero-time"></span>
+      <button id="streakBadge" class="streak-badge" aria-label="View streak history">
+        <span id="streakIcon">&#x1F525;</span>
+        <span id="streakCount">0</span>
+      </button>
+    </header>
+
+    <div id="degradedBanner" class="degraded-banner hidden">
+      <span id="degradedMessage">The day's been disrupted. Try a shorter version?</span>
+      <div class="degraded-actions">
+        <button id="degradedAccept" class="degraded-btn accept">Accept 15 min</button>
+        <button id="degradedDismiss" class="degraded-btn dismiss">Full version</button>
+      </div>
+    </div>
+
+    <main id="main">
+      <div id="nowCard" class="now-card">
+        <div id="nowAccentBar" class="accent-bar"></div>
+        <div class="now-card-content">
+          <span id="nowRole" class="role-tag"></span>
+          <h2 id="nowTitle" class="now-title"></h2>
+          <div class="now-meta">
+            <span id="nowDuration" class="caption"></span>
+            <span id="nowUntil" class="caption"></span>
+          </div>
+          <div class="now-actions">
+            <button id="markDone" class="btn primary">Mark Done</button>
+            <button id="imBack" class="btn secondary">I'm Back</button>
+          </div>
+        </div>
+      </div>
+
+      <section id="queueSection">
+        <h3 class="section-heading">Up Next</h3>
+        <ul id="queueList" class="queue-list"></ul>
+        <div id="emptyState" class="empty-state hidden">
+          <p class="body">Nothing queued &mdash; paste in your next batch.</p>
+          <button id="emptyImportBtn" class="btn outline">+ Paste Tasks</button>
+        </div>
+      </section>
+
+      <div id="quoteContainer" class="quote-container">
+        <p id="quoteText" class="quote-text"></p>
+        <span id="quoteAuthor" class="quote-author"></span>
+      </div>
+    </main>
+
+    <footer id="footer">
+      <button id="importTrigger" class="btn outline import-trigger">+ Paste Tasks</button>
+    </footer>
+
+    <div id="streakPanel" class="streak-panel hidden">
+      <h3 class="section-heading">Streak &amp; Score</h3>
+      <div class="streak-summary">
+        <span>Score: <strong id="scoreDisplay">0</strong></span>
+      </div>
+      <h4 class="section-heading" style="font-size:var(--caption);margin-top:4px">Last 7 Days</h4>
+      <div id="streakHistory" class="streak-history"></div>
+      <button id="streakClose" class="btn ghost">Close</button>
+    </div>
+
+    <div id="overlay" class="overlay hidden"></div>
+
+    <div id="importSheet" class="import-sheet hidden">
+      <h3 class="section-heading">Import Tasks</h3>
+      <p class="caption sheet-hint">Paste the JSON Claude gave you.</p>
+      <textarea id="importInput" class="import-input" rows="6" placeholder='[{"title": "...", "role": "deep", "durationMinutes": 45, "priority": 1}]'></textarea>
+      <div id="importError" class="import-error hidden"></div>
+      <button id="importSubmit" class="btn primary full">Merge In</button>
+      <button id="importCancel" class="btn ghost full">Cancel</button>
+    </div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
