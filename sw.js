@@ -1,4 +1,4 @@
-const CACHE = 'rotd-v1';
+const CACHE = 'rotd-v2';
 
 const assets = [
   '/',

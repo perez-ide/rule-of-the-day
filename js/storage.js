@@ -25,7 +25,8 @@ function defaultState() {
     tasks: [],
     streak: { currentStreak: 0, lastCompletionDate: null, history: [] },
     dayState: { date: todayISO(), disruptionCount: 0 },
-    score: 0
+    score: 0,
+    activeFilter: 'all'
   };
 }
 

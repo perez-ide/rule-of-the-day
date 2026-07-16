@@ -11,13 +11,12 @@ import {
   renderDegradedBanner,
   renderHeroTime,
   renderFilterTabs,
+  renderQueue,
   openImportSheet,
   closeImportSheet,
   openStreakPanel,
   closeStreakPanel,
-  showImportError,
-  setActiveFilter,
-  getActiveFilter
+  showImportError
 } from './ui.js';
 
 let missTwiceTaskId = null;
@@ -35,10 +34,6 @@ function init() {
     state.dayState.date = todayISO();
     state.dayState.disruptionCount = 0;
     save(state);
-  }
-
-  if (state.dayState.activeFilter) {
-    setActiveFilter(state.dayState.activeFilter);
   }
 
   renderAll(state);
@@ -112,6 +107,16 @@ function setupEvents(initialState) {
 
   document.getElementById('emptyImportBtn').addEventListener('click', openImportSheet);
 
+  document.getElementById('filterTabs').addEventListener('click', (e) => {
+    const tab = e.target.closest('.filter-tab');
+    if (!tab) return;
+    const role = tab.dataset.role;
+    state.activeFilter = role;
+    save(state);
+    renderFilterTabs(state);
+    renderQueue(state);
+  });
+
   document.getElementById('importSubmit').addEventListener('click', () => {
     const input = document.getElementById('importInput').value.trim();
     if (!input) {
@@ -166,31 +171,14 @@ function setupEvents(initialState) {
     missTwiceTaskId = null;
   });
 
-  document.getElementById('filterTabs').addEventListener('click', (e) => {
-    const tab = e.target.closest('.filter-tab');
-    if (!tab) return;
-    const role = tab.dataset.role;
-    setActiveFilter(role);
-    state = load();
-    state.dayState.activeFilter = role;
-    save(state);
-    renderFilterTabs(state);
-    renderQueue(state);
-  });
-
   document.getElementById('importInput').addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeImportSheet();
   });
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      const importSheet = document.getElementById('importSheet');
-      const streakPanel = document.getElementById('streakPanel');
-      if (!importSheet.classList.contains('hidden')) {
-        closeImportSheet();
-      } else if (!streakPanel.classList.contains('hidden')) {
-        closeStreakPanel();
-      }
+      closeImportSheet();
+      closeStreakPanel();
     }
   });
 }
