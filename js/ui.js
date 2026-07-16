@@ -38,7 +38,7 @@ export function renderHeroTime() {
   const now = new Date();
   const h = now.getHours().toString().padStart(2, '0');
   const m = now.getMinutes().toString().padStart(2, '0');
-  el.textContent = `${h}:${m}`;
+  el.innerHTML = `${h}<span class="hero-colon">:</span>${m}`;
 }
 
 export function renderStreakBadge(state) {
@@ -120,9 +120,10 @@ export function renderNowCard(state) {
   const result = nextTask(state);
 
   if (!result) {
+    const q = getQuote();
     roleEl.textContent = '';
-    titleEl.textContent = 'Nothing queued';
-    durationEl.textContent = 'Paste in your next batch';
+    titleEl.textContent = q ? `"${q.text}"` : 'Nothing queued';
+    durationEl.textContent = q ? `— ${q.author}` : 'Paste in your next batch';
     untilEl.textContent = '';
     markDone.classList.add('hidden');
     imBack.classList.add('hidden');
@@ -142,6 +143,7 @@ export function renderNowCard(state) {
     imBack.classList.add('hidden');
     const checkEl = nowCompleted.querySelector('.completed-check');
     checkEl.innerHTML = icon('check', 16);
+    checkEl.classList.add('pop-in');
     return;
   }
 
