@@ -16,14 +16,21 @@ function nextTask(state) {
 
   const degraded = isDegradedActive(state);
   if (degraded) {
-    return { task: queue[0], degraded: true, duration: getDegradedDuration() };
+    const nonCurb = queue.find(t => t.type !== 'curb');
+    if (nonCurb) return { task: nonCurb, degraded: true, duration: getDegradedDuration() };
+    return null;
   }
 
   const runway = runwayUntilNextAnchor(anchors) ?? 480;
-  const fullFit = queue.find(t => (t.durationMinutes || 15) <= runway);
+  const fullFit = queue.find(t => {
+    if (t.type === 'curb') return true;
+    return (t.durationMinutes || 15) <= runway;
+  });
   if (fullFit) return { task: fullFit, degraded: false };
 
-  return { task: queue[0], degraded: true, duration: getDegradedDuration() };
+  const nonCurbFallback = queue.find(t => t.type !== 'curb');
+  if (nonCurbFallback) return { task: nonCurbFallback, degraded: true, duration: getDegradedDuration() };
+  return null;
 }
 
 export { prioritizedQueue, nextTask };

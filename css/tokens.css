@@ -2,9 +2,12 @@
   --background: #0B0E1F;
   --surface: #141833;
   --surfaceRaised: #1C2140;
+  --surfaceBorder: #2A2F52;
   --primaryText: #EDEAE1;
   --secondaryText: #8C90AC;
   --separator: #2A2F52;
+  --accentGradientStart: #5B4FE8;
+  --accentGradientEnd: #7C6FF0;
   --accentFaith: #D8B25E;
   --accentDeep: #8F72F2;
   --accentGrowth: #57C9B4;
@@ -28,6 +31,7 @@
   --sectionGap: 24px;
   --radius8: 8px;
   --radius16: 16px;
+  --radius24: 24px;
   --radius999: 999px;
   --minTouch: 44px;
 }

@@ -13,11 +13,9 @@ const ROLE_COLORS = {
   rest: 'var(--accentRest)'
 };
 
-const OVERLAY_HIDDEN = 'hidden';
-const PANEL_HIDDEN = 'hidden';
-
 export function renderAll(state) {
   renderStreakBadge(state);
+  renderDayStrip();
   renderNowCard(state);
   renderQueue(state);
   renderQuote();
@@ -38,37 +36,71 @@ export function renderStreakBadge(state) {
   document.getElementById('streakCount').textContent = streak.current;
 }
 
+export function renderDayStrip() {
+  const strip = document.getElementById('dayStrip');
+  const today = new Date();
+  const todayISOStr = todayISO();
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - today.getDay() + i);
+    const iso = d.toISOString().slice(0, 10);
+    const isToday = iso === todayISOStr;
+    html += `
+      <div class="day-strip-cell ${isToday ? 'today' : ''}">
+        <span class="day-strip-label">${dayNames[i]}</span>
+        <span class="day-strip-num">${d.getDate()}</span>
+      </div>
+    `;
+  }
+  strip.innerHTML = html;
+}
+
 export function renderNowCard(state) {
-  const card = document.getElementById('nowCard');
-  const bar = document.getElementById('nowAccentBar');
   const roleEl = document.getElementById('nowRole');
   const titleEl = document.getElementById('nowTitle');
   const durationEl = document.getElementById('nowDuration');
   const untilEl = document.getElementById('nowUntil');
   const markDone = document.getElementById('markDone');
+  const markEntry = document.getElementById('markEntry');
+  const markEntryLabel = document.getElementById('markEntryLabel');
   const imBack = document.getElementById('imBack');
+  const holdTask = document.getElementById('holdTask');
+  const slipTask = document.getElementById('slipTask');
+  const nowActions = document.getElementById('nowActions');
+  const nowIdentity = document.getElementById('nowIdentity');
+  const nowStacked = document.getElementById('nowStacked');
+  const nowEntry = document.getElementById('nowEntry');
+  const nowCompleted = document.getElementById('nowCompleted');
+
+  markDone.classList.remove('hidden');
+  markEntry.classList.add('hidden');
+  holdTask.classList.add('hidden');
+  slipTask.classList.add('hidden');
+  nowIdentity.classList.add('hidden');
+  nowStacked.classList.add('hidden');
+  nowEntry.classList.add('hidden');
+  nowCompleted.classList.add('hidden');
+  imBack.classList.remove('hidden');
+  titleEl.classList.remove('strikethrough');
 
   const anchors = getAnchorsForToday();
   const currentAnchor = getCurrentAnchor(anchors);
 
   if (currentAnchor) {
-    const color = ROLE_COLORS[currentAnchor.role] || 'var(--accentJob)';
-    bar.style.background = color;
     roleEl.textContent = currentAnchor.role;
     titleEl.textContent = currentAnchor.title;
-    const start = currentAnchor.startTime;
-    const end = currentAnchor.endTime;
-    durationEl.textContent = `${start} - ${end}`;
+    durationEl.textContent = `${currentAnchor.startTime} – ${currentAnchor.endTime}`;
     untilEl.textContent = '';
     markDone.textContent = 'Mark Done';
-    imBack.classList.remove('hidden');
     return;
   }
 
   const result = nextTask(state);
 
   if (!result) {
-    bar.style.background = 'var(--separator)';
     roleEl.textContent = '';
     titleEl.textContent = 'Nothing queued';
     durationEl.textContent = 'Paste in your next batch';
@@ -79,10 +111,51 @@ export function renderNowCard(state) {
   }
 
   const { task, degraded, duration: overrideDuration } = result;
-  const color = ROLE_COLORS[task.role] || 'var(--accentDeep)';
-  bar.style.background = color;
   roleEl.textContent = task.role;
+
+  if (task.status === 'done' || task.status === 'held') {
+    titleEl.textContent = task.title;
+    titleEl.classList.add('strikethrough');
+    nowCompleted.classList.remove('hidden');
+    durationEl.textContent = task.status === 'held' ? 'Held today' : 'Done';
+    untilEl.textContent = '';
+    markDone.classList.add('hidden');
+    imBack.classList.add('hidden');
+    return;
+  }
+
   titleEl.textContent = task.title;
+
+  if (task.identityTag) {
+    nowIdentity.textContent = task.identityTag;
+    nowIdentity.classList.remove('hidden');
+  }
+
+  if (task.stackedAfter) {
+    const refTask = (state.tasks || []).find(t => t.id === task.stackedAfter);
+    const refAnchor = anchors.find(a => a.id === task.stackedAfter);
+    const refName = refTask ? refTask.title : refAnchor ? refAnchor.title : null;
+    if (refName) {
+      nowStacked.textContent = `After ${refName}`;
+      nowStacked.classList.remove('hidden');
+    }
+  }
+
+  if (task.entryVersion && task.type === 'build') {
+    nowEntry.textContent = task.entryVersion;
+    nowEntry.classList.remove('hidden');
+    markEntryLabel.textContent = task.entryVersion;
+    markEntry.classList.remove('hidden');
+  }
+
+  if (task.type === 'curb') {
+    markDone.classList.add('hidden');
+    holdTask.classList.remove('hidden');
+    slipTask.classList.remove('hidden');
+    durationEl.textContent = task.frictionAdded || 'Risk window';
+    untilEl.textContent = '';
+    return;
+  }
 
   const duration = overrideDuration || task.durationMinutes;
   durationEl.textContent = `${duration} min`;
@@ -92,7 +165,7 @@ export function renderNowCard(state) {
     const runway = runwayUntilNextAnchor(anchors);
     if (runway !== null && runway > 0) {
       const endTime = new Date();
-      endTime.setMinutes(endTime.getMinutes() + Math.min(duration, runway));
+      endTime.setMinutes(endTime.getMinutes() + Math.min(duration || 15, runway));
       const eh = endTime.getHours().toString().padStart(2, '0');
       const em = endTime.getMinutes().toString().padStart(2, '0');
       untilEl.textContent = `until ${eh}:${em}`;
@@ -103,10 +176,7 @@ export function renderNowCard(state) {
     untilEl.textContent = '';
   }
 
-  markDone.classList.remove('hidden');
   markDone.textContent = 'Mark Done';
-  imBack.classList.remove('hidden');
-  imBack.textContent = "I'm Back";
 }
 
 export function renderQueue(state) {
@@ -134,7 +204,6 @@ export function renderQueue(state) {
   if (items.length === 0) {
     list.innerHTML = '';
     empty.classList.remove('hidden');
-    document.getElementById('emptyImportBtn').onclick = () => openImportSheet();
     return;
   }
 
@@ -147,23 +216,46 @@ export function renderQueue(state) {
         <div class="queue-item">
           <div class="queue-item-bar" style="background:${color}"></div>
           <div class="queue-item-content">
-            <span class="queue-item-title">🔒 ${a.title}</span>
-            <span class="anchor-time caption">${a.startTime} - ${a.endTime}</span>
+            <span class="queue-item-title">&#x1F512; ${a.title}</span>
+            <span class="anchor-time caption">${a.startTime} – ${a.endTime}</span>
           </div>
         </div>
       `;
     }
     const t = item.data;
     const color = ROLE_COLORS[t.role] || 'var(--accentDeep)';
+    const isCurb = t.type === 'curb';
     const doneClass = t.status === 'done' ? 'done' : '';
+    const heldClass = t.status === 'held' ? 'held' : '';
+    const slippedClass = t.status === 'slipped' ? 'slipped' : '';
+    const curbClass = isCurb ? 'curb' : '';
+
+    let stackedHtml = '';
+    if (t.stackedAfter) {
+      const refTask = (state.tasks || []).find(r => r.id === t.stackedAfter);
+      const refAnchor = anchors.find(a => a.id === t.stackedAfter);
+      const refName = refTask ? refTask.title : refAnchor ? refAnchor.title : null;
+      if (refName) stackedHtml = `<div class="queue-item-stacked">After ${refName}</div>`;
+    }
+
+    let statusHtml = '';
+    if (isCurb) {
+      if (t.status === 'held') statusHtml = '<span class="queue-item-status held">Held</span>';
+      else if (t.status === 'slipped') statusHtml = '<span class="queue-item-status slipped">Slipped</span>';
+    }
+
     return `
-      <div class="queue-item" data-task-id="${t.id}">
+      <div class="queue-item ${curbClass}">
         <div class="queue-item-bar" style="background:${color}"></div>
         <div class="queue-item-content">
-          <span class="queue-item-title ${doneClass}">${t.title}</span>
+          <div class="queue-item-text">
+            <span class="queue-item-title ${doneClass} ${heldClass} ${slippedClass}">${t.title}</span>
+            ${stackedHtml}
+          </div>
           <div class="queue-item-extra">
+            ${statusHtml}
             <span class="queue-item-role">${t.role}</span>
-            <span class="queue-item-duration">${t.durationMinutes}m</span>
+            <span class="queue-item-duration">${t.type === 'curb' ? '' : (t.durationMinutes || 0) + 'm'}</span>
           </div>
         </div>
       </div>
@@ -214,14 +306,14 @@ export function renderStreakPanel() {
     return `
       <div class="streak-day ${done ? 'completed' : ''}">
         <span>${label}</span>
-        <span>${done ? '✓' : '—'}</span>
+        <span>${done ? '&#x2713;' : '—'}</span>
       </div>
     `;
   }).join('');
 }
 
 export function openImportSheet() {
-  document.getElementById('overlay').classList.remove(OVERLAY_HIDDEN);
+  document.getElementById('overlay').classList.remove('hidden');
   document.getElementById('importSheet').classList.add('open');
   document.getElementById('importSheet').classList.remove('hidden');
   document.getElementById('importInput').value = '';
@@ -230,7 +322,7 @@ export function openImportSheet() {
 }
 
 export function closeImportSheet() {
-  document.getElementById('overlay').classList.add(OVERLAY_HIDDEN);
+  document.getElementById('overlay').classList.add('hidden');
   document.getElementById('importSheet').classList.remove('open');
   setTimeout(() => {
     document.getElementById('importSheet').classList.add('hidden');
@@ -239,12 +331,12 @@ export function closeImportSheet() {
 
 export function openStreakPanel() {
   renderStreakPanel();
-  document.getElementById('overlay').classList.remove(OVERLAY_HIDDEN);
+  document.getElementById('overlay').classList.remove('hidden');
   document.getElementById('streakPanel').classList.remove('hidden');
 }
 
 export function closeStreakPanel() {
-  document.getElementById('overlay').classList.add(OVERLAY_HIDDEN);
+  document.getElementById('overlay').classList.add('hidden');
   document.getElementById('streakPanel').classList.add('hidden');
 }
 
@@ -252,8 +344,4 @@ export function showImportError(msg) {
   const el = document.getElementById('importError');
   el.textContent = msg;
   el.classList.remove('hidden');
-}
-
-export function hideImportError() {
-  document.getElementById('importError').classList.add('hidden');
 }

@@ -29,6 +29,8 @@
       </button>
     </header>
 
+    <div id="dayStrip" class="day-strip"></div>
+
     <div id="degradedBanner" class="degraded-banner hidden">
       <span id="degradedMessage">The day's been disrupted. Try a shorter version?</span>
       <div class="degraded-actions">
@@ -37,18 +39,35 @@
       </div>
     </div>
 
+    <div id="missTwiceNudge" class="miss-twice-nudge hidden">
+      <span id="missTwiceMessage">This slipped twice — shrink it to the two-minute version?</span>
+      <div class="degraded-actions">
+        <button id="missTwiceAccept" class="degraded-btn accept">Use entry version</button>
+        <button id="missTwiceDismiss" class="degraded-btn dismiss">Keep full version</button>
+      </div>
+    </div>
+
     <main id="main">
       <div id="nowCard" class="now-card">
-        <div id="nowAccentBar" class="accent-bar"></div>
         <div class="now-card-content">
-          <span id="nowRole" class="role-tag"></span>
+          <span id="nowIdentity" class="now-identity hidden"></span>
+          <span id="nowRole" class="now-role-tag"></span>
           <h2 id="nowTitle" class="now-title"></h2>
+          <span id="nowStacked" class="now-stacked hidden"></span>
+          <span id="nowEntry" class="now-entry hidden"></span>
           <div class="now-meta">
             <span id="nowDuration" class="caption"></span>
             <span id="nowUntil" class="caption"></span>
           </div>
-          <div class="now-actions">
+          <div class="now-completed-msg hidden" id="nowCompleted">
+            <span class="completed-check">&#x2713;</span>
+            <span class="completed-text">Completed</span>
+          </div>
+          <div id="nowActions" class="now-actions">
             <button id="markDone" class="btn primary">Mark Done</button>
+            <button id="markEntry" class="btn entry hidden">Or just: <span id="markEntryLabel"></span></button>
+            <button id="holdTask" class="btn hold hidden">Held</button>
+            <button id="slipTask" class="btn slip hidden">Slipped</button>
             <button id="imBack" class="btn secondary">I'm Back</button>
           </div>
         </div>
@@ -88,7 +107,7 @@
     <div id="importSheet" class="import-sheet hidden">
       <h3 class="section-heading">Import Tasks</h3>
       <p class="caption sheet-hint">Paste the JSON Claude gave you.</p>
-      <textarea id="importInput" class="import-input" rows="6" placeholder='[{"title": "...", "role": "deep", "durationMinutes": 45, "priority": 1}]'></textarea>
+      <textarea id="importInput" class="import-input" rows="6" placeholder='[{"title": "...", "role": "deep", "type": "build", "durationMinutes": 45, "priority": 1}]'></textarea>
       <div id="importError" class="import-error hidden"></div>
       <button id="importSubmit" class="btn primary full">Merge In</button>
       <button id="importCancel" class="btn ghost full">Cancel</button>

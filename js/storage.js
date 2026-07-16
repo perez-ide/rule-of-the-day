@@ -21,7 +21,7 @@ function save(state) {
 
 function defaultState() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     tasks: [],
     streak: { currentStreak: 0, lastCompletionDate: null, history: [] },
     dayState: { date: todayISO(), disruptionCount: 0 },
@@ -39,7 +39,7 @@ function getTasks(state) {
 }
 
 function getPendingTasks(state) {
-  return getTasks(state).filter(t => t.status === 'pending' || t.status === 'carried_over');
+  return getTasks(state).filter(t => t.status === 'pending' || t.status === 'carried_over' || t.status === 'held');
 }
 
 function addTasks(state, newTasks) {
@@ -48,10 +48,12 @@ function addTasks(state, newTasks) {
   for (const t of newTasks) {
     existing.push({
       ...t,
-      id: crypto.randomUUID(),
+      id: t.id || crypto.randomUUID(),
       day: today,
-      status: 'pending',
-      source: t.source || 'claude-import'
+      status: t.status || 'pending',
+      source: t.source || 'claude-import',
+      type: t.type || 'build',
+      consecutiveMissCount: t.consecutiveMissCount || 0
     });
   }
   state.tasks = existing;
@@ -62,6 +64,25 @@ function markTaskDone(state, taskId) {
   const task = (state.tasks || []).find(t => t.id === taskId);
   if (task) {
     task.status = 'done';
+    task.consecutiveMissCount = 0;
+  }
+  return state;
+}
+
+function markTaskHeld(state, taskId) {
+  const task = (state.tasks || []).find(t => t.id === taskId);
+  if (task) {
+    task.status = 'held';
+    task.consecutiveMissCount = 0;
+  }
+  return state;
+}
+
+function markTaskSlipped(state, taskId) {
+  const task = (state.tasks || []).find(t => t.id === taskId);
+  if (task) {
+    task.status = 'slipped';
+    task.consecutiveMissCount = (task.consecutiveMissCount || 0) + 1;
   }
   return state;
 }
@@ -82,12 +103,6 @@ function carryOverTasks(state) {
   return { state, changed };
 }
 
-function resetDisruptionCount(state) {
-  state.dayState.date = todayISO();
-  state.dayState.disruptionCount = 0;
-  return state;
-}
-
 function incrementDisruption(state) {
   state.dayState.disruptionCount = (state.dayState.disruptionCount || 0) + 1;
   return state;
@@ -100,6 +115,11 @@ function getDisruptionCount(state) {
   return state.dayState.disruptionCount || 0;
 }
 
+function shouldShowMissTwiceNudge(state, taskId) {
+  const task = (state.tasks || []).find(t => t.id === taskId);
+  return task && task.consecutiveMissCount >= 2;
+}
+
 export {
   load,
   save,
@@ -109,8 +129,10 @@ export {
   getPendingTasks,
   addTasks,
   markTaskDone,
+  markTaskHeld,
+  markTaskSlipped,
   carryOverTasks,
-  resetDisruptionCount,
   incrementDisruption,
-  getDisruptionCount
+  getDisruptionCount,
+  shouldShowMissTwiceNudge
 };

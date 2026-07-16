@@ -1,7 +1,7 @@
 import { load, save, addTasks, todayISO } from './storage.js';
 
-const REQUIRED_FIELDS = ['title', 'role', 'durationMinutes'];
 const VALID_ROLES = ['faith', 'job', 'deep', 'growth', 'rest'];
+const VALID_TYPES = ['build', 'curb'];
 
 function parseAndMerge(rawJson) {
   const errors = [];
@@ -29,24 +29,38 @@ function parseAndMerge(rawJson) {
 
   for (let i = 0; i < tasks.length; i++) {
     const t = tasks[i];
-    const missing = REQUIRED_FIELDS.filter(f => t[f] === undefined || t[f] === null);
-    if (missing.length > 0) {
-      errors.push(`Task ${i + 1}: missing required field(s): ${missing.join(', ')}`);
+    if (!t.title) {
+      errors.push(`Task ${i + 1}: missing required field "title"`);
       continue;
     }
-    if (!VALID_ROLES.includes(t.role)) {
-      errors.push(`Task ${i + 1}: "${t.role}" is not a valid role (use: ${VALID_ROLES.join(', ')})`);
+    if (!t.role || !VALID_ROLES.includes(t.role)) {
+      errors.push(`Task ${i + 1}: "${t.role || '(none)'}" is not a valid role (use: ${VALID_ROLES.join(', ')})`);
+      continue;
+    }
+    const type = t.type || 'build';
+    if (!VALID_TYPES.includes(type)) {
+      errors.push(`Task ${i + 1}: "${type}" is not a valid type (use: build, curb)`);
+      continue;
+    }
+    if (type === 'build' && (t.durationMinutes === undefined || t.durationMinutes === null)) {
+      errors.push(`Task ${i + 1}: missing required field "durationMinutes" for build task`);
       continue;
     }
     if (existingTitles.has(t.title.toLowerCase().trim())) {
-      errors.push(`Task "${t.title}" already exists — skipping duplicate.`);
+      errors.push(`"${t.title}" already exists — skipping duplicate.`);
       continue;
     }
     valid.push({
       title: t.title,
       role: t.role,
+      type,
       durationMinutes: t.durationMinutes,
-      priority: t.priority !== undefined ? t.priority : 99
+      priority: t.priority !== undefined ? t.priority : 99,
+      identityTag: t.identityTag,
+      entryVersion: t.entryVersion,
+      stackedAfter: t.stackedAfter,
+      frictionAdded: t.frictionAdded,
+      replacementAction: t.replacementAction
     });
     existingTitles.add(t.title.toLowerCase().trim());
   }

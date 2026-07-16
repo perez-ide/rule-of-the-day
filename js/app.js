@@ -1,4 +1,4 @@
-import { load, save, markTaskDone, carryOverTasks, todayISO } from './storage.js';
+import { load, save, markTaskDone, markTaskHeld, markTaskSlipped, carryOverTasks, todayISO, shouldShowMissTwiceNudge } from './storage.js';
 import { nextTask } from './queue.js';
 import { recordDisruption, acceptDegraded, dismissDegraded } from './degraded.js';
 import { recordCompletion } from './streak.js';
@@ -16,6 +16,8 @@ import {
   closeStreakPanel,
   showImportError
 } from './ui.js';
+
+let missTwiceTaskId = null;
 
 function init() {
   let state = load();
@@ -60,10 +62,38 @@ function setupEvents(initialState) {
     }
     const result = nextTask(state);
     if (!result || !result.task) return;
+    if (result.task.type === 'curb') return;
     state = markTaskDone(state, result.task.id);
     save(state);
     recordCompletion();
     refresh();
+  });
+
+  document.getElementById('markEntry').addEventListener('click', () => {
+    const result = nextTask(state);
+    if (!result || !result.task) return;
+    state = markTaskDone(state, result.task.id);
+    save(state);
+    recordCompletion();
+    refresh();
+  });
+
+  document.getElementById('holdTask').addEventListener('click', () => {
+    const result = nextTask(state);
+    if (!result || !result.task || result.task.type !== 'curb') return;
+    state = markTaskHeld(state, result.task.id);
+    save(state);
+    recordCompletion();
+    refresh();
+  });
+
+  document.getElementById('slipTask').addEventListener('click', () => {
+    const result = nextTask(state);
+    if (!result || !result.task || result.task.type !== 'curb') return;
+    state = markTaskSlipped(state, result.task.id);
+    save(state);
+    refresh();
+    checkMissTwice(state, result.task.id);
   });
 
   document.getElementById('imBack').addEventListener('click', () => {
@@ -72,6 +102,7 @@ function setupEvents(initialState) {
   });
 
   document.getElementById('importTrigger').addEventListener('click', openImportSheet);
+
   document.getElementById('emptyImportBtn').addEventListener('click', openImportSheet);
 
   document.getElementById('importSubmit').addEventListener('click', () => {
@@ -109,9 +140,50 @@ function setupEvents(initialState) {
     refresh();
   });
 
+  document.getElementById('missTwiceAccept').addEventListener('click', () => {
+    if (missTwiceTaskId) {
+      const task = state.tasks.find(t => t.id === missTwiceTaskId);
+      if (task && task.entryVersion) {
+        markTaskDone(state, missTwiceTaskId);
+        save(state);
+        recordCompletion();
+      }
+    }
+    document.getElementById('missTwiceNudge').classList.add('hidden');
+    missTwiceTaskId = null;
+    refresh();
+  });
+
+  document.getElementById('missTwiceDismiss').addEventListener('click', () => {
+    document.getElementById('missTwiceNudge').classList.add('hidden');
+    missTwiceTaskId = null;
+  });
+
   document.getElementById('importInput').addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeImportSheet();
   });
+}
+
+function checkMissTwice(state, taskId) {
+  if (shouldShowMissTwiceNudge(state, taskId)) {
+    const task = state.tasks.find(t => t.id === taskId);
+    const nudge = document.getElementById('missTwiceNudge');
+    const msg = document.getElementById('missTwiceMessage');
+    if (task && task.entryVersion) {
+      msg.textContent = `This slipped twice — shrink it to "${task.entryVersion}" for today?`;
+    } else if (task && task.type === 'curb' && task.replacementAction) {
+      const replacement = state.tasks.find(t => t.id === task.replacementAction);
+      if (replacement) {
+        msg.textContent = `This slipped twice — try "${replacement.entryVersion || replacement.title}" instead?`;
+      } else {
+        msg.textContent = 'This slipped twice — want to shrink it to the two-minute version?';
+      }
+    } else {
+      msg.textContent = 'This slipped twice — want to shrink it to the two-minute version?';
+    }
+    missTwiceTaskId = taskId;
+    nudge.classList.remove('hidden');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
