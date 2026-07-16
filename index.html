@@ -29,8 +29,6 @@
       </button>
     </header>
 
-    <div id="dayStrip" class="day-strip" role="navigation" aria-label="Week view"></div>
-
     <section id="anchorCards" class="anchor-cards" aria-label="Today's anchors">
       <div class="anchor-cards-scroll" id="anchorCardsScroll"></div>
     </section>
@@ -86,11 +84,6 @@
           <button id="emptyImportBtn" class="btn outline" aria-label="Import tasks">+ Paste Tasks</button>
         </div>
       </section>
-
-      <div id="quoteContainer" class="quote-container">
-        <p id="quoteText" class="quote-text"></p>
-        <span id="quoteAuthor" class="quote-author"></span>
-      </div>
     </main>
 
     <button id="fab" class="fab" aria-label="Import tasks">
@@ -98,6 +91,11 @@
         <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
       </svg>
     </button>
+
+    <div id="quoteSplash" class="quote-splash hidden">
+      <p class="quote-text"></p>
+      <span class="quote-author"></span>
+    </div>
 
     <div id="streakPanel" class="streak-panel hidden" role="dialog" aria-label="Streak and score">
       <h3 class="section-heading">Streak &amp; Score</h3>

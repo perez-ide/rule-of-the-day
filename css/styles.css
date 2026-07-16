@@ -45,53 +45,10 @@
   color: var(--accentFaith);
 }
 
-.day-strip {
-  display: flex;
-  gap: 4px;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--surfaceBorder);
-}
-
-.day-strip-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 4px 0;
-  min-width: 32px;
-}
-
-.day-strip-label {
-  font-size: var(--microLabel);
-  color: var(--secondaryText);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  opacity: 0.7;
-}
-
-.day-strip-num {
-  font-size: var(--caption);
-  font-weight: var(--weight500);
-  color: var(--secondaryText);
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius999);
-}
-
-.day-strip-cell.today .day-strip-num {
-  background: linear-gradient(135deg, var(--accentGradientStart), var(--accentGradientEnd));
-  color: #fff;
-  font-weight: var(--weight600);
-}
-
 .anchor-cards {
   margin: 0 calc(-1 * var(--screenPad));
   padding: 0 var(--screenPad);
+  margin-top: calc(-1 * var(--sectionGap));
 }
 
 .anchor-cards-scroll {
@@ -110,7 +67,7 @@
 .anchor-card {
   min-width: 60%;
   max-width: 200px;
-  border-radius: var(--radius16);
+  border-radius: var(--radius12);
   padding: 12px 14px;
   position: relative;
   overflow: hidden;
@@ -161,7 +118,7 @@
 
 .now-card {
   background: linear-gradient(135deg, var(--accentGradientStart), var(--accentGradientEnd));
-  border-radius: var(--radius24);
+  border-radius: var(--radius16);
   display: flex;
   overflow: hidden;
   position: relative;
@@ -477,26 +434,51 @@
   line-height: 1.6;
 }
 
-.quote-container {
-  text-align: center;
-  padding: 8px 0;
+@keyframes splash-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes splash-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-12px) scale(0.95); }
 }
 
-.quote-text {
+.quote-splash {
+  position: fixed;
+  bottom: calc(env(safe-area-inset-bottom) + 80px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: var(--surfaceRaised);
+  border: 1px solid var(--surfaceBorder);
+  border-radius: var(--radius12);
+  padding: 16px 20px;
+  z-index: 45;
+  text-align: center;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  pointer-events: none;
+  animation: splash-in 0.3s ease forwards;
+}
+
+.quote-splash.out {
+  animation: splash-out 0.25s ease forwards;
+}
+
+.quote-splash .quote-text {
   font-family: 'Fraunces', serif;
   font-size: var(--body);
   font-weight: var(--weight400);
-  color: var(--secondaryText);
+  color: var(--primaryText);
   line-height: 1.6;
   font-style: italic;
 }
 
-.quote-author {
+.quote-splash .quote-author {
   display: block;
   font-size: var(--caption);
   color: var(--secondaryText);
-  opacity: 0.6;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .fab {
@@ -587,7 +569,7 @@
   transform: translate(-50%, -50%);
   background: var(--surfaceRaised);
   border: 1px solid var(--surfaceBorder);
-  border-radius: var(--radius16);
+  border-radius: var(--radius12);
   padding: 20px;
   z-index: 60;
   min-width: 260px;

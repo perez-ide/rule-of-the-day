@@ -25,12 +25,10 @@ const FILTER_TABS = [
 
 export function renderAll(state) {
   renderStreakBadge(state);
-  renderDayStrip();
   renderAnchorCards(state);
   renderNowCard(state);
   renderFilterTabs(state);
   renderQueue(state);
-  renderQuote();
   renderDegradedBanner(state);
   renderHeroTime();
 }
@@ -49,28 +47,6 @@ export function renderStreakBadge(state) {
   document.getElementById('streakBadge').setAttribute('aria-label', `Streak: ${streak.current} days. View history.`);
   const iconEl = document.getElementById('streakIcon');
   iconEl.innerHTML = icon('flame', 14);
-}
-
-export function renderDayStrip() {
-  const strip = document.getElementById('dayStrip');
-  const today = new Date();
-  const todayISOStr = todayISO();
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-  let html = '';
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - today.getDay() + i);
-    const iso = d.toISOString().slice(0, 10);
-    const isToday = iso === todayISOStr;
-    html += `
-      <div class="day-strip-cell ${isToday ? 'today' : ''}">
-        <span class="day-strip-label">${dayNames[i]}</span>
-        <span class="day-strip-num">${d.getDate()}</span>
-      </div>
-    `;
-  }
-  strip.innerHTML = html;
 }
 
 export function renderAnchorCards(state) {
@@ -309,18 +285,6 @@ export function renderQueue(state) {
   }).join('');
 }
 
-export function renderQuote() {
-  const container = document.getElementById('quoteContainer');
-  const quote = getQuote();
-  if (!quote) {
-    container.classList.add('hidden');
-    return;
-  }
-  container.classList.remove('hidden');
-  document.getElementById('quoteText').textContent = `"${quote.text}"`;
-  document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
-}
-
 export function renderDegradedBanner(state) {
   const banner = document.getElementById('degradedBanner');
   const auto = shouldAutoDegrade(state);
@@ -358,7 +322,31 @@ export function renderStreakPanel() {
   }).join('');
 }
 
+let _splashActive = false;
+
 export function openImportSheet() {
+  if (_splashActive) return;
+  const splash = document.getElementById('quoteSplash');
+  const quote = getQuote();
+  if (quote) {
+    _splashActive = true;
+    splash.querySelector('.quote-text').textContent = `"${quote.text}"`;
+    splash.querySelector('.quote-author').textContent = `— ${quote.author}`;
+    splash.classList.remove('hidden', 'out');
+    setTimeout(() => {
+      splash.classList.add('out');
+      setTimeout(() => {
+        splash.classList.add('hidden');
+        _splashActive = false;
+        _openSheet();
+      }, 300);
+    }, 2000);
+  } else {
+    _openSheet();
+  }
+}
+
+function _openSheet() {
   document.getElementById('overlay').classList.remove('hidden');
   document.getElementById('importSheet').classList.add('open');
   document.getElementById('importSheet').classList.remove('hidden');
