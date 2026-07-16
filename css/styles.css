@@ -12,7 +12,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: calc(env(safe-area-inset-top) + 12px);
+  padding-top: calc(env(safe-area-inset-top) + 20px);
 }
 
 .hero-time {
@@ -48,7 +48,6 @@
 .anchor-cards {
   margin: 0 calc(-1 * var(--screenPad));
   padding: 0 var(--screenPad);
-  margin-top: calc(-1 * var(--sectionGap));
 }
 
 .anchor-cards-scroll {

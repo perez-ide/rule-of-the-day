@@ -105,8 +105,6 @@ function setupEvents(initialState) {
 
   document.getElementById('fab').addEventListener('click', openImportSheet);
 
-  document.getElementById('emptyImportBtn').addEventListener('click', openImportSheet);
-
   document.getElementById('filterTabs').addEventListener('click', (e) => {
     const tab = e.target.closest('.filter-tab');
     if (!tab) return;
